@@ -48,7 +48,7 @@ app port — everything else is identical.
 | Wrong | 0 |
 
 Exact score does not stack with the outcome point (3 total, not 4). Predictions
-**lock 4 hours before kickoff** — enforced server-side in
+**lock 2 hours before kickoff** — enforced server-side in
 `src/app/api/predictions/route.ts` and shown to users in the banner on the
 matches page. All times are stored in UTC and displayed in each user's local timezone.
 

@@ -1,0 +1,28 @@
+{
+  "name": "wc26-predictions",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "sync": "curl -s -H \"Authorization: Bearer $CRON_SECRET\" http://localhost:3000/api/cron/sync"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "jose": "^5.9.6",
+    "next": "^14.2.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "prisma": "^5.22.0",
+    "typescript": "^5.7.2"
+  }
+}

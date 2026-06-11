@@ -1,0 +1,74 @@
+// WC26 Predictions — data model
+// Match IDs come straight from football-data.org so syncs are idempotent.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  name        String? // defaults to email prefix on first login
+  createdAt   DateTime     @default(now())
+  predictions Prediction[]
+}
+
+model LoginCode {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model Match {
+  id         Int          @id // football-data.org match id
+  homeTeam   String
+  awayTeam   String
+  homeCrest  String?
+  awayCrest  String?
+  stage      String? // GROUP_STAGE, ROUND_OF_16, ...
+  groupName  String? // "Group A" ...
+  startAt    DateTime
+  status     String // TIMED | SCHEDULED | IN_PLAY | PAUSED | FINISHED | POSTPONED | CANCELLED
+  homeScore  Int?
+  awayScore  Int?
+  scoredAt   DateTime? // set once points for this match have been calculated
+  predictions Prediction[]
+
+  @@index([startAt])
+  @@index([status, scoredAt])
+}
+
+enum Pick {
+  HOME
+  DRAW
+  AWAY
+}
+
+model Prediction {
+  id        String   @id @default(cuid())
+  userId    String
+  matchId   Int
+  pick      Pick
+  predHome  Int? // optional exact score
+  predAway  Int?
+  points    Int? // null until the match is scored; then 0, 1 or 3
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@index([userId])
+}

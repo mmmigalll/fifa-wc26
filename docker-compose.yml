@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wc26
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wc26}
+      POSTGRES_DB: wc26
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wc26 -d wc26"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://wc26:${POSTGRES_PASSWORD:-wc26}@db:5432/wc26
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -hex 32)}
+      CRON_SECRET: ${CRON_SECRET:?Set CRON_SECRET in .env (openssl rand -hex 16)}
+      FOOTBALL_DATA_TOKEN: ${FOOTBALL_DATA_TOKEN:?Set FOOTBALL_DATA_TOKEN in .env (free at football-data.org)}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-WC26 Predictions <login@example.com>}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Replaces Vercel cron: syncs fixtures/results and triggers automatic
+  # scoring every 15 minutes (requirement 7).
+  sync:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      CRON_SECRET: ${CRON_SECRET}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "sync sidecar: first run in 30s, then every 15 minutes"
+        sleep 30
+        while true; do
+          curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/sync \
+            && echo " synced $$(date)" \
+            || echo "sync failed $$(date) (app still starting?)"
+          sleep 900
+        done
+
+volumes:
+  dbdata:

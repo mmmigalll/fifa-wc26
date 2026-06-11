@@ -1,7 +1,7 @@
 import type { Pick } from '@prisma/client';
 
 /** Predictions lock this many hours before kickoff. */
-export const LOCK_HOURS = 4;
+export const LOCK_HOURS = 2;
 
 export const POINTS_EXACT_SCORE = 3;
 export const POINTS_CORRECT_OUTCOME = 1;

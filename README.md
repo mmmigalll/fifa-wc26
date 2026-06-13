@@ -105,7 +105,7 @@ Scheduling options:
 - **Vercel Hobby** — crons are limited to once per day; use an external
   pinger such as cron-job.org hitting the URL with the same header.
 - **Own server / Railway / Fly** — plain crontab:
-  `*/15 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://yourapp.com/api/cron/sync`
+  `*/15 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://fifa-wc26-production.up.railway.app/api/cron/sync`
 
 ## Deploying (fastest path)
 

@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 
 /** Renders an ISO timestamp in the viewer's local timezone (client-side only
  *  to avoid server/client hydration mismatch). */
-export function LocalTime({ iso, mode = 'datetime' }: { iso: string; mode?: 'datetime' | 'time' }) {
+export function LocalTime({
+  iso,
+  mode = 'datetime',
+}: {
+  iso: string;
+  mode?: 'datetime' | 'time' | 'date';
+}) {
   const [text, setText] = useState('');
 
   useEffect(() => {
@@ -12,13 +18,20 @@ export function LocalTime({ iso, mode = 'datetime' }: { iso: string; mode?: 'dat
     setText(
       mode === 'time'
         ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-        : d.toLocaleString(undefined, {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+        : mode === 'date'
+          ? d.toLocaleDateString(undefined, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
+          : d.toLocaleString(undefined, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
     );
   }, [iso, mode]);
 

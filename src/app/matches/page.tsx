@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { isLocked, LOCK_HOURS, lockTime } from '@/lib/scoring';
 import { PredictionForm } from '@/components/PredictionForm';
 import { LocalTime } from '@/components/LocalTime';
+import { MatchDetailsModal } from '@/components/MatchDetailsModal';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,9 +51,28 @@ export default async function MatchesPage() {
               <span>
                 {m.groupName ?? m.stage?.replaceAll('_', ' ').toLowerCase()} · <LocalTime iso={m.startAt.toISOString()} />
               </span>
-              <span className={`status-chip ${locked ? 'locked' : 'open'}`}>
-                {live ? 'Live' : locked ? 'Locked' : 'Open'}
-              </span>
+              <div className="match-meta-actions">
+                <MatchDetailsModal
+                  match={{
+                    id: m.id,
+                    homeTeam: m.homeTeam,
+                    awayTeam: m.awayTeam,
+                    homeCrest: m.homeCrest,
+                    awayCrest: m.awayCrest,
+                    stage: m.stage,
+                    groupName: m.groupName,
+                    startAt: m.startAt.toISOString(),
+                    status: m.status,
+                    homeScore: m.homeScore,
+                    awayScore: m.awayScore,
+                  }}
+                  locked={locked}
+                  prediction={p ? { pick: p.pick, predHome: p.predHome, predAway: p.predAway } : null}
+                />
+                <span className={`status-chip ${locked ? 'locked' : 'open'}`}>
+                  {live ? 'Live' : locked ? 'Locked' : 'Open'}
+                </span>
+              </div>
             </div>
             <div className="match-row">
               <div className="team">

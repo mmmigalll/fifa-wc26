@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 // Requirement 7: runs on a schedule (see vercel.json), pulls fixtures and
-// results, then calculates points for every finished, not-yet-scored match.
+// results, then calculates points for every finished match with a full-time score.
+// Points are recalculated on each run so late score corrections from the API
+// are reflected (scoredAt only records when a match was first scored).
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization');
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -43,11 +45,10 @@ export async function GET(req: Request) {
     synced++;
   }
 
-  // 2) Score finished matches that have not been scored yet.
+  // 2) Score every finished match with a known full-time result.
   const toScore = await prisma.match.findMany({
     where: {
       status: 'FINISHED',
-      scoredAt: null,
       homeScore: { not: null },
       awayScore: { not: null },
     },
@@ -58,6 +59,7 @@ export async function GET(req: Request) {
 
   for (const match of toScore) {
     const result = { homeScore: match.homeScore!, awayScore: match.awayScore! };
+    const firstScore = match.scoredAt === null;
 
     await prisma.$transaction([
       ...match.predictions.map((p) =>
@@ -66,10 +68,14 @@ export async function GET(req: Request) {
           data: { points: calculatePoints(p, result) },
         }),
       ),
-      prisma.match.update({
-        where: { id: match.id },
-        data: { scoredAt: new Date() },
-      }),
+      ...(firstScore
+        ? [
+            prisma.match.update({
+              where: { id: match.id },
+              data: { scoredAt: new Date() },
+            }),
+          ]
+        : []),
     ]);
     scoredMatches++;
   }
